@@ -44,7 +44,9 @@ QuicksortNumber(A,0,len(A)-1)
 
 endTimer=time.time()
 print("Running time: ",endTimer-startTimer, "seconds")
-with open('output2.csv', 'w', newline='') as f:
+
+filename = "quick_sort_" + str(len(A)) + ".csv" 
+with open(filename, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(A)
 
