@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <chrono>
 
 struct DataRecord {
     long long id;
@@ -141,39 +142,55 @@ public:
             std::cout << "Invalid row range!" << std::endl;
             return;
         }
-    
+
+        auto totalStart = std::chrono::high_resolution_clock::now();
+
         // Convert to 0-based indexing
         int start = startRow - 1;
         int end = endRow - 1;
-    
+
         // Extract subset
         std::vector<DataRecord> subset(data.begin() + start, data.begin() + end + 1);
-    
+
         // Debug: Show the subset we're sorting
         std::cout << "Sorting subset from row " << startRow << " to " << endRow << ":" << std::endl;
         for (size_t i = 0; i < subset.size(); i++) {
             std::cout << "Position " << i << ": " << subset[i].id << "/" << subset[i].name << std::endl;
         }
-    
+
         // Create output filename
         std::string filename = "merge_sort_step_" + std::to_string(startRow) + "_" + std::to_string(endRow) + ".txt";
         std::ofstream outFile(filename);
-    
+
         if (!outFile.is_open()) {
             std::cout << "Error creating output file!" << std::endl;
             return;
         }
-    
+
         outputFile = &outFile;
-    
+
         // Print initial array
         printArray(subset);
-    
+
+        std::cout << "Starting merge sort process..." << std::endl;
+        auto sortStart = std::chrono::high_resolution_clock::now();
+        
         // Perform merge sort with step tracking
         mergeSortWithSteps(subset, 0, subset.size() - 1);
-    
+        
+        auto sortEnd = std::chrono::high_resolution_clock::now();
+        auto sortDuration = std::chrono::duration_cast<std::chrono::microseconds>(sortEnd - sortStart);
+
         outFile.close();
-        std::cout << "Merge sort completed! Output saved to " << filename << std::endl;
+        
+        auto totalEnd = std::chrono::high_resolution_clock::now();
+        auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(totalEnd - totalStart);
+        
+        std::cout << "\n=== MERGE SORT COMPLETED ===" << std::endl;
+        std::cout << "Sorting time: " << sortDuration.count() / 1000.0 << " ms" << std::endl;
+        std::cout << "Total process time: " << totalDuration.count() << " ms" << std::endl;
+        std::cout << "Elements sorted: " << subset.size() << std::endl;
+        std::cout << "Output saved to: " << filename << std::endl;
     }
     
     int getDataSize() const {

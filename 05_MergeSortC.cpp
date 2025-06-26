@@ -125,21 +125,37 @@ public:
             return;
         }
         
-        // Record start time
-        auto start = std::chrono::high_resolution_clock::now();
+        auto totalStart = std::chrono::high_resolution_clock::now();
+        
+        std::cout << "Starting merge sort on " << data.size() << " records..." << std::endl;
+        
+        // Record start time for sorting only
+        auto sortStart = std::chrono::high_resolution_clock::now();
         
         // Perform merge sort
         mergeSort(data, 0, data.size() - 1);
         
-        // Record end time
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        // Record end time for sorting
+        auto sortEnd = std::chrono::high_resolution_clock::now();
+        auto sortDuration = std::chrono::duration_cast<std::chrono::milliseconds>(sortEnd - sortStart);
         
-        // Print running time
-        std::cout << "Merge sort completed in " << duration.count() << " ms" << std::endl;
+        std::cout << "Sorting completed in " << sortDuration.count() << " ms" << std::endl;
+        std::cout << "Saving sorted data to file..." << std::endl;
         
         // Save sorted data to CSV
+        auto saveStart = std::chrono::high_resolution_clock::now();
         saveSortedData();
+        auto saveEnd = std::chrono::high_resolution_clock::now();
+        auto saveDuration = std::chrono::duration_cast<std::chrono::milliseconds>(saveEnd - saveStart);
+        
+        auto totalEnd = std::chrono::high_resolution_clock::now();
+        auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(totalEnd - totalStart);
+        
+        std::cout << "\n=== MERGE SORT PERFORMANCE ===" << std::endl;
+        std::cout << "Sorting time: " << sortDuration.count() << " ms" << std::endl;
+        std::cout << "File saving time: " << saveDuration.count() << " ms" << std::endl;
+        std::cout << "Total process time: " << totalDuration.count() << " ms" << std::endl;
+        std::cout << "Records processed: " << data.size() << std::endl;
     }
     
     void saveSortedData() {
@@ -175,7 +191,7 @@ int main() {
     MergeSort sorter;
     
     // Load dataset - you can change this filename as needed
-    std::string filename = "dataset_sample_1000.csv";
+    std::string filename = "dataset_1000000.csv";
     
     if (!sorter.loadDataset(filename)) {
         std::cout << "Failed to load dataset!" << std::endl;

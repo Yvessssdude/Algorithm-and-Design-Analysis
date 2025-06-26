@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <chrono>
 
 struct DataRecord {
     long long id;
@@ -62,6 +63,8 @@ public:
     }
     
     void binarySearchWithSteps(long long target) {
+        auto totalStart = std::chrono::high_resolution_clock::now();
+        
         // Create output filename: binary_search_step_target.txt
         std::string filename = "binary_search_step_" + std::to_string(target) + ".txt";
         std::ofstream outFile(filename);
@@ -71,12 +74,17 @@ public:
             return;
         }
         
+        std::cout << "Starting binary search for target: " << target << std::endl;
+        auto searchStart = std::chrono::high_resolution_clock::now();
+        
         int left = 0;
         int right = data.size() - 1;
         bool found = false;
+        int comparisons = 0;
         
         while (left <= right) {
             int mid = left + (right - left) / 2;
+            comparisons++;
             
             // Write search step to file (row number is 1-based)
             outFile << (mid + 1) << ": " << data[mid].id << "/" << data[mid].name << std::endl;
@@ -91,6 +99,9 @@ public:
             }
         }
         
+        auto searchEnd = std::chrono::high_resolution_clock::now();
+        auto searchDuration = std::chrono::duration_cast<std::chrono::microseconds>(searchEnd - searchStart);
+        
         // If target not found, add -1 at the end
         if (!found) {
             outFile << "-1" << std::endl;
@@ -98,11 +109,18 @@ public:
         
         outFile.close();
         
+        auto totalEnd = std::chrono::high_resolution_clock::now();
+        auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(totalEnd - totalStart);
+        
+        std::cout << "\n=== BINARY SEARCH COMPLETED ===" << std::endl;
         if (found) {
             std::cout << "Target " << target << " FOUND!" << std::endl;
         } else {
             std::cout << "Target " << target << " NOT FOUND!" << std::endl;
         }
+        std::cout << "Search time: " << searchDuration.count() / 1000.0 << " ms" << std::endl;
+        std::cout << "Total process time: " << totalDuration.count() << " ms" << std::endl;
+        std::cout << "Comparisons made: " << comparisons << std::endl;
         std::cout << "Search path saved to: " << filename << std::endl;
     }
     

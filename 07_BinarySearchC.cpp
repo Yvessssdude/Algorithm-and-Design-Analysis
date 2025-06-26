@@ -102,28 +102,46 @@ public:
             return;
         }
         
-        size_t n = data.size();
+        auto totalStart = std::chrono::high_resolution_clock::now();
+        
+        int n = data.size();
+        std::cout << "Starting binary search performance analysis on " << n << " records..." << std::endl;
         
         // Best case: Search for middle element n times (found in first comparison)
+        std::cout << "\nRunning best case analysis..." << std::endl;
+        auto bestStart = std::chrono::high_resolution_clock::now();
         std::vector<long long> bestCaseTargets(n, data[n / 2].id);
         double bestTime = measureSearchTime(bestCaseTargets);
+        auto bestEnd = std::chrono::high_resolution_clock::now();
+        auto bestDuration = std::chrono::duration_cast<std::chrono::milliseconds>(bestEnd - bestStart);
+        std::cout << "Best case analysis completed in " << bestDuration.count() << " ms" << std::endl;
         
         // Average case: Search for random existing elements n times
+        std::cout << "\nRunning average case analysis..." << std::endl;
+        auto avgStart = std::chrono::high_resolution_clock::now();
         std::vector<long long> avgCaseTargets;
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, data.size() - 1);
         
-        for (size_t i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             avgCaseTargets.push_back(data[dis(gen)].id);
         }
         double avgTime = measureSearchTime(avgCaseTargets);
+        auto avgEnd = std::chrono::high_resolution_clock::now();
+        auto avgDuration = std::chrono::duration_cast<std::chrono::milliseconds>(avgEnd - avgStart);
+        std::cout << "Average case analysis completed in " << avgDuration.count() << " ms" << std::endl;
         
         // Worst case: Search for non-existent element n times (searches entire tree)
+        std::cout << "\nRunning worst case analysis..." << std::endl;
+        auto worstStart = std::chrono::high_resolution_clock::now();
         long long maxId = std::max_element(data.begin(), data.end(), 
             [](const DataRecord& a, const DataRecord& b) { return a.id < b.id; })->id;
         std::vector<long long> worstCaseTargets(n, maxId + 1);
         double worstTime = measureSearchTime(worstCaseTargets);
+        auto worstEnd = std::chrono::high_resolution_clock::now();
+        auto worstDuration = std::chrono::duration_cast<std::chrono::milliseconds>(worstEnd - worstStart);
+        std::cout << "Worst case analysis completed in " << worstDuration.count() << " ms" << std::endl;
         
         // Create output filename
         std::string outputFilename = "binary_search_" + std::to_string(n) + ".txt";
@@ -141,12 +159,20 @@ public:
         
         outFile.close();
         
+        auto totalEnd = std::chrono::high_resolution_clock::now();
+        auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(totalEnd - totalStart);
+        
         // Display results on console
-        std::cout << "\nBinary Search Analysis Completed!" << std::endl;
+        std::cout << "\n=== BINARY SEARCH ANALYSIS COMPLETED ===" << std::endl;
+        std::cout << "Total analysis time: " << totalDuration.count() << " ms" << std::endl;
         std::cout << "Dataset size: " << n << std::endl;
         std::cout << "Searches performed per case: " << n << std::endl;
         std::cout << "Results saved to: " << outputFilename << std::endl;
-        std::cout << "\nTiming Results:" << std::endl;
+        std::cout << "\n=== TIMING BREAKDOWN ===" << std::endl;
+        std::cout << "Best case analysis: " << bestDuration.count() << " ms" << std::endl;
+        std::cout << "Average case analysis: " << avgDuration.count() << " ms" << std::endl;
+        std::cout << "Worst case analysis: " << worstDuration.count() << " ms" << std::endl;
+        std::cout << "\n=== SEARCH PERFORMANCE RESULTS ===" << std::endl;
         std::cout << "Best case time   : " << bestTime << " ms" << std::endl;
         std::cout << "Average case time: " << avgTime << " ms" << std::endl;
         std::cout << "Worst case time  : " << worstTime << " ms" << std::endl;
