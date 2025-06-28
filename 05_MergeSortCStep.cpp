@@ -1,199 +1,165 @@
-#include <iostream>
+#include <iostream> //05_MergeSortCStep.cpp
 #include <fstream>
 #include <vector>
 #include <string>
-#include <sstream>
 #include <chrono>
 
-struct DataRecord {
+using namespace std;
+
+// Simple structure to hold record data
+struct Record {
     long long id;
-    std::string name;
+    string name;
     
-    DataRecord(long long id = 0, const std::string& name = "") : id(id), name(name) {}
+    Record(long long i = 0, string n = "") : id(i), name(n) {}
 };
 
 class MergeSortStep {
 private:
-    std::vector<DataRecord> data;
-    std::ofstream* outputFile;
+    vector<Record> data;    // All records from CSV
+    ofstream outFile;       // Output file for steps
     
-public:
-    bool loadDataset(const std::string& filename) {
-        std::ifstream file(filename);
-        if (!file.is_open()) {
-            std::cout << "Error: Could not open file " << filename << std::endl;
-            return false;
-        }
-        
-        std::string line;
-        
-        // Read first line and check if it's a header or data
-        if (std::getline(file, line)) {
-            std::stringstream ss(line);
-            std::string firstPart, secondPart;
-            
-            if (std::getline(ss, firstPart, ',') && std::getline(ss, secondPart)) {
-                // Try to parse the first part as a number
-                try {
-                    long long id = std::stoll(firstPart);
-                    // If successful, this is data, not a header
-                    data.emplace_back(id, secondPart);
-                    std::cout << "First line is data: " << id << "/" << secondPart << std::endl;
-                } catch (const std::exception& e) {
-                    // If parsing fails, this is likely a header
-                    std::cout << "First line is header: " << line << std::endl;
-                }
-            }
-        }
-        
-        // Continue reading the rest of the file
-        while (std::getline(file, line)) {
-            std::stringstream ss(line);
-            std::string idStr, name;
-            
-            if (std::getline(ss, idStr, ',') && std::getline(ss, name)) {
-                try {
-                    long long id = std::stoll(idStr);
-                    data.emplace_back(id, name);
-                } catch (const std::exception& e) {
-                    std::cout << "Error parsing line: " << line << std::endl;
-                }
-            }
-        }
-        
-        file.close();
-        
-        // Debug: Print first few records
-        std::cout << "First 5 records loaded:" << std::endl;
-        for (size_t i = 0; i < std::min((size_t)5, data.size()); i++) {
-            std::cout << "Row " << (i + 1) << ": " << data[i].id << "/" << data[i].name << std::endl;
-        }
-        
-        return !data.empty();
-    }
-    
-    void printArray(const std::vector<DataRecord>& arr) {
-        *outputFile << "[";
-        for (size_t i = 0; i < arr.size(); i++) {
-            *outputFile << arr[i].id << "/" << arr[i].name;
+    // Write array state to file
+    void writeArray(vector<Record>& arr) {
+        outFile << "[";
+        for (int i = 0; i < arr.size(); i++) {
+            outFile << arr[i].id << "/" << arr[i].name;
             if (i < arr.size() - 1) {
-                *outputFile << ", ";
+                outFile << ", ";
             }
         }
-        *outputFile << "]" << std::endl;
+        outFile << "]" << endl;
     }
     
-    void merge(std::vector<DataRecord>& arr, int left, int mid, int right) {
-        int n1 = mid - left + 1;
-        int n2 = right - mid;
+    // Merge two sorted parts
+    void merge(vector<Record>& arr, int left, int mid, int right) {
+        // Create temporary arrays for left and right parts
+        vector<Record> leftPart, rightPart;
         
-        std::vector<DataRecord> leftArr(n1);
-        std::vector<DataRecord> rightArr(n2);
+        // Copy left half
+        for (int i = left; i <= mid; i++) {
+            leftPart.push_back(arr[i]);
+        }
         
-        // Copy data to temp arrays
-        for (int i = 0; i < n1; i++)
-            leftArr[i] = arr[left + i];
-        for (int j = 0; j < n2; j++)
-            rightArr[j] = arr[mid + 1 + j];
+        // Copy right half
+        for (int i = mid + 1; i <= right; i++) {
+            rightPart.push_back(arr[i]);
+        }
         
-        // Merge the temp arrays back
+        // Merge the two parts back
         int i = 0, j = 0, k = left;
         
-        while (i < n1 && j < n2) {
-            if (leftArr[i].id <= rightArr[j].id) {
-                arr[k] = leftArr[i];
+        // Compare and merge
+        while (i < leftPart.size() && j < rightPart.size()) {
+            if (leftPart[i].id <= rightPart[j].id) {
+                arr[k] = leftPart[i];
                 i++;
             } else {
-                arr[k] = rightArr[j];
+                arr[k] = rightPart[j];
                 j++;
             }
             k++;
         }
         
-        // Copy remaining elements
-        while (i < n1) {
-            arr[k] = leftArr[i];
+        // Copy remaining elements from left
+        while (i < leftPart.size()) {
+            arr[k] = leftPart[i];
             i++;
             k++;
         }
         
-        while (j < n2) {
-            arr[k] = rightArr[j];
+        // Copy remaining elements from right
+        while (j < rightPart.size()) {
+            arr[k] = rightPart[j];
             j++;
             k++;
         }
     }
-
-    void mergeSortWithSteps(std::vector<DataRecord>& arr, int left, int right) {
+    
+    // Recursive merge sort with step recording
+    void mergeSortSteps(vector<Record>& arr, int left, int right) {
         if (left < right) {
+            // Find middle point
             int mid = left + (right - left) / 2;
-        
-            mergeSortWithSteps(arr, left, mid);
-            mergeSortWithSteps(arr, mid + 1, right);
+            
+            // Sort left half
+            mergeSortSteps(arr, left, mid);
+            
+            // Sort right half
+            mergeSortSteps(arr, mid + 1, right);
+            
+            // Merge the sorted halves
             merge(arr, left, mid, right);
             
-            // Print array state after each merge
-            printArray(arr);
+            // Record this step in output file
+            writeArray(arr);
         }
-    }
-
-    void performMergeSort(int startRow, int endRow) {
-        if (startRow < 1 || endRow > data.size() || startRow > endRow) {
-            std::cout << "Invalid row range!" << std::endl;
-            return;
-        }
-
-        auto totalStart = std::chrono::high_resolution_clock::now();
-
-        // Convert to 0-based indexing
-        int start = startRow - 1;
-        int end = endRow - 1;
-
-        // Extract subset
-        std::vector<DataRecord> subset(data.begin() + start, data.begin() + end + 1);
-
-        // Debug: Show the subset we're sorting
-        std::cout << "Sorting subset from row " << startRow << " to " << endRow << ":" << std::endl;
-        for (size_t i = 0; i < subset.size(); i++) {
-            std::cout << "Position " << i << ": " << subset[i].id << "/" << subset[i].name << std::endl;
-        }
-
-        // Create output filename
-        std::string filename = "merge_sort_step_" + std::to_string(startRow) + "_" + std::to_string(endRow) + ".txt";
-        std::ofstream outFile(filename);
-
-        if (!outFile.is_open()) {
-            std::cout << "Error creating output file!" << std::endl;
-            return;
-        }
-
-        outputFile = &outFile;
-
-        // Print initial array
-        printArray(subset);
-
-        std::cout << "Starting merge sort process..." << std::endl;
-        auto sortStart = std::chrono::high_resolution_clock::now();
-        
-        // Perform merge sort with step tracking
-        mergeSortWithSteps(subset, 0, subset.size() - 1);
-        
-        auto sortEnd = std::chrono::high_resolution_clock::now();
-        auto sortDuration = std::chrono::duration_cast<std::chrono::microseconds>(sortEnd - sortStart);
-
-        outFile.close();
-        
-        auto totalEnd = std::chrono::high_resolution_clock::now();
-        auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(totalEnd - totalStart);
-        
-        std::cout << "\n=== MERGE SORT COMPLETED ===" << std::endl;
-        std::cout << "Sorting time: " << sortDuration.count() / 1000.0 << " ms" << std::endl;
-        std::cout << "Total process time: " << totalDuration.count() << " ms" << std::endl;
-        std::cout << "Elements sorted: " << subset.size() << std::endl;
-        std::cout << "Output saved to: " << filename << std::endl;
     }
     
-    int getDataSize() const {
+public:
+    // Load data from CSV file
+    bool loadData(string filename) {
+        ifstream file(filename);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        string line;
+        // Read each line
+        while (getline(file, line)) {
+            int commaPos = line.find(',');
+            if (commaPos != string::npos) {
+                try {
+                    // Extract ID and name
+                    long long id = stoll(line.substr(0, commaPos));
+                    string name = line.substr(commaPos + 1);
+                    data.push_back(Record(id, name));
+                } catch (...) {
+                    // Skip bad lines
+                }
+            }
+        }
+        file.close();
+        return !data.empty();
+    }
+    
+    // Main sorting function
+    void performSort(int startRow, int endRow) {
+        // Check if range is valid
+        if (startRow < 1 || endRow > data.size() || startRow > endRow) {
+            return;
+        }
+        
+        // Start timing
+        auto startTime = chrono::high_resolution_clock::now();
+        
+        // Get subset of data to sort
+        vector<Record> subset;
+        for (int i = startRow - 1; i < endRow; i++) {
+            subset.push_back(data[i]);
+        }
+        
+        // Create output file
+        string filename = "merge_sort_step_" + to_string(startRow) + "_" + to_string(endRow) + ".txt";
+        outFile.open(filename);
+        
+        // Write initial state
+        writeArray(subset);
+        
+        // Perform merge sort with step recording
+        mergeSortSteps(subset, 0, subset.size() - 1);
+        
+        // Close file
+        outFile.close();
+        
+        // Calculate and print time
+        auto endTime = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
+        cout << duration.count() / 1000000.0 << " s" << endl;
+    }
+    
+    // Get data size
+    int getSize() {
         return data.size();
     }
 };
@@ -201,24 +167,20 @@ public:
 int main() {
     MergeSortStep sorter;
     
-    // Load dataset
-    if (!sorter.loadDataset("dataset_sample_1000.csv")) {
-        std::cout << "Failed to load dataset!" << std::endl;
+    // Load the dataset
+    if (!sorter.loadData("dataset_sample_1000000.csv")) {
         return 1;
     }
     
-    std::cout << "Dataset loaded successfully! Total rows: " << sorter.getDataSize() << std::endl;
+    // Get input from user with clear prompts
+    int start, end;
+    cout << "Enter start row: ";
+    cin >> start;
+    cout << "Enter end row: ";
+    cin >> end;
     
-    // Get user input
-    int startRow, endRow;
-    std::cout << "Enter start row (1 to " << sorter.getDataSize() << "): ";
-    std::cin >> startRow;
-    
-    std::cout << "Enter end row (1 to " << sorter.getDataSize() << "): ";
-    std::cin >> endRow;
-    
-    // Perform merge sort
-    sorter.performMergeSort(startRow, endRow);
+    // Perform sorting and show running time
+    sorter.performSort(start, end);
     
     return 0;
 }
