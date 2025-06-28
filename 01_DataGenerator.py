@@ -13,14 +13,16 @@ if len(sys.argv) != 2:
 n = int(sys.argv[1])
 filename = "dataset_" + str(n) + ".csv" 
 
-# Create empty list 
-numbers = random.sample(range(1, 2000000000), n)
+# Create list with item range available from 1 to 2 billion
+# List length is determined by n 
+numbers = random.sample(range(1, 2000000001), n)
 
 # Open file
 file = open(filename, 'w', newline='')
 writer = csv.writer(file)
 
 # Write the rows in the file
+# Generate random lowercase string, length range from 4 to 5
 for i in range(n):
     num = numbers[i]
     str_length = random.randint(4, 6)
