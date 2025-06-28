@@ -92,8 +92,6 @@ public:
         
         // Calculate and print running time
         auto endTime = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
-        cout << "Running time: " << duration.count() / 1000000.0 << " seconds" << endl;
     }
     
     // Get data size
