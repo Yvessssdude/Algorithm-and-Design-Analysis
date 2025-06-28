@@ -1,157 +1,110 @@
-#include <iostream> //07_BinarySearchC.cpp
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <chrono>
-#include <random>
-#include <algorithm>
 
 using namespace std;
+using namespace chrono;
 
-// Simple structure to hold record data
-struct Record {
-    long long id;
-    string name;
-    
-    Record(long long i = 0, string n = "") : id(i), name(n) {}
+struct Data {
+    int key; //(for number)
+    string value; //(for alphabet)
 };
 
-class BinarySearchAnalysis {
-private:
-    vector<Record> data;    // All records from CSV
-    int datasetSize;        // Actual number of records loaded
-    
-    // Perform single binary search
-    bool binarySearch(long long target) {
-        int left = 0;
-        int right = data.size() - 1;
-        
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-            
-            if (data[mid].id == target) {
-                return true;
-            }
-            else if (data[mid].id < target) {
-                left = mid + 1;
-            }
-            else {
-                right = mid - 1;
-            }
-        }
-        return false;
-    }
-    
-    // Measure search time for multiple targets
-    double measureSearchTime(vector<long long>& targets) {
-        auto startTime = chrono::high_resolution_clock::now();
-        
-        // Perform searches
-        for (long long target : targets) {
-            binarySearch(target);
-        }
-        
-        auto endTime = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
-        return duration.count() / 1000.0; // Convert to milliseconds
-    }
-    
-public:
-    // Load data from CSV file
-    bool loadData(string filename) {
-        ifstream file(filename);
-        if (!file.is_open()) {
-            return false;
-        }
-        
-        string line;
-        // Read each line
-        while (getline(file, line)) {
-            int commaPos = line.find(',');
-            if (commaPos != string::npos) {
-                try {
-                    // Extract ID and name
-                    long long id = stoll(line.substr(0, commaPos));
-                    string name = line.substr(commaPos + 1);
-                    data.push_back(Record(id, name));
-                } catch (...) {
-                    // Skip bad lines
-                }
-            }
-        }
-        file.close();
-        
-        // Store the actual number of records loaded
-        datasetSize = data.size();
-        
-        return !data.empty();
-    }
-    
-    // Perform analysis for all three cases
-    void performAnalysis() {
-        int n = data.size();
-        
-        // Prepare targets for each case
-        vector<long long> bestCaseTargets;
-        vector<long long> avgCaseTargets;
-        vector<long long> worstCaseTargets;
-        
-        // Best case: middle element (found in first comparison)
-        long long middleId = data[n / 2].id;
-        for (int i = 0; i < n; i++) {
-            bestCaseTargets.push_back(middleId);
-        }
-        
-        // Average case: random existing elements
-        random_device rd;
-        mt19937 gen(rd());
-        uniform_int_distribution<> dis(0, data.size() - 1);
-        for (int i = 0; i < n; i++) {
-            avgCaseTargets.push_back(data[dis(gen)].id);
-        }
-        
-        // Worst case: non-existent element (searches entire tree)
-        long long maxId = data[data.size() - 1].id; // Last element (highest ID)
-        for (int i = 0; i < n; i++) {
-            worstCaseTargets.push_back(maxId + 1);
-        }
-        
-        // Measure times for each case
-        double bestTime = measureSearchTime(bestCaseTargets);
-        double avgTime = measureSearchTime(avgCaseTargets);
-        double worstTime = measureSearchTime(worstCaseTargets);
-        
-        // Create output filename using actual dataset size
-        string outputFilename = "binary_search_" + to_string(datasetSize) + ".txt";
-        ofstream outFile(outputFilename);
-        
-        // Write results to file
-        outFile << "Best case time   : " << bestTime << " ms" << endl;
-        outFile << "Average case time: " << avgTime << " ms" << endl;
-        outFile << "Worst case time  : " << worstTime << " ms" << endl;
-        
-        outFile.close();
-        
-        // Print confirmation to terminal
-        cout << "Output has been saved to " << outputFilename << endl;
-    }
-    
-    // Get data size
-    int getSize() {
-        return data.size();
-    }
-};
+// Load dataset from file
+vector<Data> loadDataset(const string& filename) {
+    vector<Data> data;
+    ifstream file(filename);
+    string line;
 
+    while (getline(file, line)) {
+        size_t comma = line.find(','); 
+        if (comma != string::npos) {
+            try {
+                int key = stoi(line.substr(0, comma));
+                string value = line.substr(comma + 1);
+                data.push_back({key, value});
+            } catch (...) {
+                continue;
+            }
+        }
+    }
+
+    return data;
+}
+
+// function for binary search
+int binarySearch(const vector<Data>& data, int target) {
+    int left = 0;
+    int right = data.size() - 1;
+
+    while (left <= right) {
+        int mid = (left + right) / 2;
+        if (data[mid].key == target) return mid;
+        else if (data[mid].key < target) left = mid + 1;
+        else right = mid - 1;
+    }
+
+    return -1;
+}
+
+// measure search times for each data
+vector<double> measureSearchTimes(const vector<Data>& data) {
+    vector<double> times;
+    // Loops through every key(number) in the dataset
+    for (const auto& item : data) {
+        int target = item.key;
+        auto start = high_resolution_clock::now();
+        binarySearch(data, target);
+        auto end = high_resolution_clock::now();
+        //convert microseconds into milliseconds
+        double duration = duration_cast<microseconds>(end - start).count() / 1000.0;
+        times.push_back(duration);
+    }
+
+    return times;
+}
+
+// Save best, average and worst case into file
+void saveResults(const string& filename, const vector<double>& times) {
+    double best = times[0], worst = times[0], sum = 0;
+
+    for (double t : times) {
+        if (t < best) best = t;
+        if (t > worst) worst = t;
+        sum += t;
+    }
+
+    double average = sum / times.size();
+
+    ofstream out(filename);
+    out << "Best case time   : " << best << " ms\n";
+    out << "Average case time: " << average << " ms\n";
+    out << "Worst case time  : " << worst << " ms\n";
+    out.close();
+
+    cout << "Results saved to: " << filename << endl;
+}
+
+// Main
 int main() {
-    BinarySearchAnalysis analyzer;
-    
-    // Load the dataset
-    if (!analyzer.loadData("merge_sort_1000000.csv")) {
+    int data_size;
+    cout << "Enter dataset size : ";
+    cin >> data_size;
+
+    string inputFile = "merge_sort_" + to_string(data_size) + ".csv";
+    string outputFile = "binary_search_" + to_string(data_size) + ".txt";
+
+    vector<Data> data = loadDataset(inputFile);
+
+    if (data.empty()) {
+        cout << "Failed to load data from file: " << inputFile << endl;
         return 1;
     }
-    
-    // Perform binary search analysis
-    analyzer.performAnalysis();
-    
+
+    vector<double> times = measureSearchTimes(data);
+    saveResults(outputFile, times);
+
     return 0;
 }

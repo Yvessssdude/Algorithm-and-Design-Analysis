@@ -3,26 +3,24 @@ import csv
 import string
 import sys
 
-# Check first if user provide any size of dataset
+#check first if user provide any size of dataset
 if len(sys.argv) != 2:
     print("Please run the program like this:")
     print("python 01_DataGenerator.py 1000")
     sys.exit()
 
-# Get dataset size from command 
+#get dataset size from command 
 n = int(sys.argv[1])
-filename = "dataset_" + str(n) + ".csv" 
+filename = "dataset_" + str(n) + ".csv" #output filename
 
-# Create list with item range available from 1 to 2 billion
-# List length is determined by n 
-numbers = random.sample(range(1, 2000000001), n)
+#generate a list of 'n' unique random integers betweeen 1 and 2 billion 
+numbers = random.sample(range(1, 2000000000), n)
 
-# Open file
+#open file
 file = open(filename, 'w', newline='')
 writer = csv.writer(file)
 
-# Write the rows in the file
-# Generate random lowercase string, length range from 4 to 5
+#write the rows that contain number and string in the file
 for i in range(n):
     num = numbers[i]
     str_length = random.randint(4, 6)
