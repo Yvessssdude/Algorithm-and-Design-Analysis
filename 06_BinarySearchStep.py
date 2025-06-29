@@ -1,9 +1,8 @@
 import csv
-import sys
-import os
 
-def binary_search_step(filename, target):
-    # Read and load the sorted dataset
+
+def binarySearchStep(filename, target):
+    #read and load the sorted dataset
     data = []
     with open(filename, mode='r', newline='') as file:
         reader = csv.reader(file)
@@ -15,7 +14,7 @@ def binary_search_step(filename, target):
                 except ValueError:
                     continue
 
-    # Binary search and trace steps
+    #binary search and trace every steps
     left = 0
     right = len(data) - 1
     steps = []
@@ -37,7 +36,7 @@ def binary_search_step(filename, target):
     if not found:
         steps.append("-1")
 
-    # Output to required file format
+    #output file to binary_search_step_(target).txt
     output_file = f"binary_search_step_{target}.txt"
     with open(output_file, 'w') as f:
         for step in steps:
@@ -45,20 +44,14 @@ def binary_search_step(filename, target):
 
     print(f"Search steps saved to: {output_file}")
 
+#Main
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python binary_search_step.py <sorted_dataset.csv> <target_integer>")
-        sys.exit(1)
+   
+    dataSize = input("Enter dataset size : ").strip()
+    target = input("Enter target number : ").strip()
+    targetNum = int(target)
 
-    dataset_file = sys.argv[1]
-    try:
-        target_value = int(sys.argv[2])
-    except ValueError:
-        print("Error: target must be an integer.")
-        sys.exit(1)
+    dataFile = f"merge_sort_{dataSize}.csv"
 
-    if not os.path.exists(dataset_file):
-        print(f"File not found: {dataset_file}")
-        sys.exit(1)
-
-    binary_search_step(dataset_file, target_value)
+    #perform binary search
+    binarySearchStep(dataFile, targetNum)

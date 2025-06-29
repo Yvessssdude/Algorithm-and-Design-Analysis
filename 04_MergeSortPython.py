@@ -1,27 +1,14 @@
 import csv
 import time
-import os
 
-# Read all rows from the dataset
-def read_dataset(file_path):
-    data = []
-    with open(file_path, 'r') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            if len(row) == 2:
-                try:
-                    number = int(row[0])
-                    data.append((number, row[1]))
-                except ValueError:
-                    continue
-    return data
+
 
 # Merge Sort with index tracking for in-place sorting
-def merge_sort(arr, left, right):
+def mergeSort(arr, left, right):
     if left < right:
         mid = (left + right) // 2
-        merge_sort(arr, left, mid)
-        merge_sort(arr, mid + 1, right)
+        mergeSort(arr, left, mid)
+        mergeSort(arr, mid + 1, right)
         merge(arr, left, mid, right)
 
 def merge(arr, left, mid, right):
@@ -50,35 +37,40 @@ def merge(arr, left, mid, right):
         j += 1
         k += 1
 
-# Write sorted result to a .csv file
-def write_to_csv(filename, data):
-    with open(filename, 'w', newline='') as f:
+    
+#MAIN
+def main():
+
+    dataSize = input("Enter dataset size : ").strip()
+    dataFile = f"dataset_{dataSize}.csv"
+    outputFile = f"merge_sort_{dataSize}.csv"
+
+    #read and load data 
+    data = []
+    with open(dataFile, 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            if len(row) == 2:
+                try:
+                    number = int(row[0])
+                    data.append((number, row[1]))
+                except ValueError:
+                    continue
+
+    #sort and time only the sorting operation
+    start = time.perf_counter()
+    mergeSort(data, 0, len(data) - 1)
+    endTime = time.perf_counter()
+
+    #save sorted data in output file
+    with open(outputFile, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
 
-# Main function
-def main():
-    input_file = 'dataset_1000000.csv'
-
-    # Extract dataset size from filename
-    dataset_size = os.path.splitext(os.path.basename(input_file))[0].split('_')[-1]
-    output_file = f"merge_sort_{dataset_size}.csv"
-
-    # Load data
-    all_data = read_dataset(input_file)
-
-    # Sort and time only the sorting operation
-    start_time = time.perf_counter()
-    merge_sort(all_data, 0, len(all_data) - 1)
-    end_time = time.perf_counter()
-
-    # Save sorted data
-    write_to_csv(output_file, all_data)
-
-    # Print timing in seconds
-    elapsed_sec = end_time - start_time
-    print(f"Sorted {len(all_data)} records in {elapsed_sec:.2f} seconds")
-    print(f"Output saved to '{output_file}'")
+    #print running time
+    elapsed_sec = endTime - start
+    print(f"Sorted {len(data)} records in {elapsed_sec:.2f} seconds")
+    print(f"Output saved to '{outputFile}'")
 
 if __name__ == "__main__":
     main()
