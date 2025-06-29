@@ -77,7 +77,7 @@ formattedArray=[]
 startRow = int(input("Enter starting row: "))  
 endRow = int(input("Enter ending row: "))  
 datasetSize = int(input("Enter dataset size: ")) 
-with open(f"dataset_{datasetSize}.csv", "r", newline='') as file:
+with open(f"dataset_{datasetSize}.txt", "r", newline='') as file:
     reader = csv.reader(file)
     for line_number, row in enumerate(reader, start=1):
         if startRow <= line_number <= endRow:

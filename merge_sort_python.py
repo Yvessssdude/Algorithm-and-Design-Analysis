@@ -1,8 +1,6 @@
 import csv
 import time
 
-
-
 # Merge Sort with index tracking for in-place sorting
 def mergeSort(arr, left, right):
     if left < right:
